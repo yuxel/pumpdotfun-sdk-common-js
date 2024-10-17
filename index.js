@@ -92,8 +92,6 @@ class PumpFunSDK {
 
     let globalAccount = await this.getGlobalAccount(commitment);
 
-    console.log("bb", buyAmount);
-
     return await this.getBuyInstructions(buyer, mint, globalAccount.feeRecipient, buyAmount, buyAmountWithSlippage);
   }
 
