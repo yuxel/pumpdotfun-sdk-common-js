@@ -1,0 +1,25 @@
+{
+  "name": "pumpdotfun-sdk-common-js",
+  "version": "1.0.0",
+  "description": "CommonJS fork of https://github.com/rckprtr/pumpdotfun-sdk/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuxel/pumpdotfun-sdk-common-js.git"
+  },
+  "author": "Osman Yuksel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yuxel/pumpdotfun-sdk-common-js/issues"
+  },
+  "homepage": "https://github.com/yuxel/pumpdotfun-sdk-common-js#readme",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@coral-xyz/borsh": "^0.30.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.3"
+  }
+}
