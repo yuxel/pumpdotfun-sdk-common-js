@@ -1,4 +1,4 @@
-const { ComputeBudgetProgram, PublicKey, SendTransactionError, Transaction, TransactionMessage, VersionedTransaction } = require("@solana/web3.js");
+const { LAMPORTS_PER_SOL, ComputeBudgetProgram, PublicKey, SendTransactionError, Transaction, TransactionMessage, VersionedTransaction } = require("@solana/web3.js");
 
 const { struct, bool, u64, publicKey } = require("@coral-xyz/borsh");
 
@@ -245,17 +245,48 @@ const calculateWithSlippageSell = (amount, basisPoints) => {
   return amount - (amount * basisPoints) / 10000n;
 };
 
+const getComputeUnitsSimulation = async (connection, tx, payer, threshold) => {
+  threshold = threshold  || 1.05; // add 0.05 threshold
+  const testInstructions = [ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }), ...tx.instructions];
+
+  const testTransaction = new VersionedTransaction(
+    new TransactionMessage({
+      instructions: testInstructions,
+      payerKey: payer,
+      // RecentBlockhash can by any public key during simulation
+      // since 'replaceRecentBlockhash' is set to 'true' below
+      recentBlockhash: PublicKey.default.toString(),
+    }).compileToV0Message(),
+  );
+
+  const rpcResponse = await connection.simulateTransaction(testTransaction, {
+    replaceRecentBlockhash: true,
+    sigVerify: false,
+  });
+
+  var unitsConsumed = rpcResponse.value.unitsConsumed;
+
+  return parseInt(unitsConsumed * threshold);
+};
+
 async function sendTx(connection, tx, payer, signers, priorityFees, commitment = DEFAULT_COMMITMENT, finality = DEFAULT_FINALITY) {
   let newTx = new Transaction();
 
   if (priorityFees) {
-    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({
-      units: priorityFees.unitLimit,
-    });
+    var units;
+    var microLamports;
 
-    const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({
-      microLamports: priorityFees.unitPrice,
-    });
+    //IF this autoCalculate && fee parameters set, try to optimize the units consumed and microLamports for that
+    if (priorityFees?.autoCalculate == true && priorityFees?.fee) {
+      units = await getComputeUnitsSimulation(connection, tx, payer, priorityFees?.threshold || null);
+      microLamports = parseInt(((priorityFees.fee * LAMPORTS_PER_SOL) / units) * 1000000);
+    } else {
+      microLamports = priorityFees.unitPrice;
+      units = priorityFees.unitLimit;
+    }
+
+    const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ units });
+    const addPriorityFee = ComputeBudgetProgram.setComputeUnitPrice({ microLamports });
     newTx.add(modifyComputeUnits);
     newTx.add(addPriorityFee);
   }
@@ -287,14 +318,14 @@ async function sendTx(connection, tx, payer, signers, priorityFees, commitment =
       //results: txResult,
     };
   } catch (e) {
+    var logs;
     if (e instanceof SendTransactionError) {
       let ste = e;
-      console.log(await ste.getLogs(connection));
-    } else {
-      console.error(e);
+      logs = await ste.getLogs(connection);
     }
     return {
-      error: e,
+      error: e?.message || e,
+      logs,
       success: false,
     };
   }

@@ -35,6 +35,8 @@ var init = async () => {
     {
       unitLimit: 100000,
       unitPrice: 0.001 * LAMPORTS_PER_SOL,
+      //autoCalculate: true,
+      //fee: 0.0001
     },
     "confirmed",
     "confirmed",
