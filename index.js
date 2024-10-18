@@ -270,16 +270,20 @@ async function sendTx(connection, tx, payer, signers, priorityFees, commitment =
       skipPreflight: false,
     });
 
+    var start = new Date().getTime();
     let txResult = await getTxDetails(connection, sig, commitment, finality);
+    var end = new Date().getTime();
     if (!txResult) {
       return {
         success: false,
         error: "Transaction failed",
+        confirmDuration: end - start,
       };
     }
     return {
       success: true,
       signature: sig,
+      confirmDuration: end - start,
       //results: txResult,
     };
   } catch (e) {
