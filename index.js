@@ -246,7 +246,7 @@ const calculateWithSlippageSell = (amount, basisPoints) => {
 };
 
 const getComputeUnitsSimulation = async (connection, tx, payer, threshold) => {
-  threshold = threshold  || 1.05; // add 0.05 threshold
+  threshold = threshold || 1.05; // add 0.05 threshold
   const testInstructions = [ComputeBudgetProgram.setComputeUnitLimit({ units: 1_400_000 }), ...tx.instructions];
 
   const testTransaction = new VersionedTransaction(
@@ -279,10 +279,15 @@ async function sendTx(connection, tx, payer, signers, priorityFees, commitment =
     //IF this autoCalculate && fee parameters set, try to optimize the units consumed and microLamports for that
     if (priorityFees?.autoCalculate == true && priorityFees?.fee) {
       units = await getComputeUnitsSimulation(connection, tx, payer, priorityFees?.threshold || null);
+    } else {
+      units = priorityFees.unitLimit;
+    }
+
+    //if fee set and unitPrice not set
+    if (priorityFees?.fee && !priorityFees?.unitPrice) {
       microLamports = parseInt(((priorityFees.fee * LAMPORTS_PER_SOL) / units) * 1000000);
     } else {
       microLamports = priorityFees.unitPrice;
-      units = priorityFees.unitLimit;
     }
 
     const modifyComputeUnits = ComputeBudgetProgram.setComputeUnitLimit({ units });

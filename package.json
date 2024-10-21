@@ -1,6 +1,6 @@
 {
   "name": "pumpdotfun-sdk-common-js",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CommonJS fork of https://github.com/rckprtr/pumpdotfun-sdk/",
   "main": "index.js",
   "scripts": {
